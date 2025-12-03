@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Můj blog – Ani</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f9fafb;
+        color: #111827;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 1.6rem;
+      }
+      header .right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+      }
+      .btn {
+        border: none;
+        padding: 7px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+      .btn-primary {
+        background: #2563eb;
+        color: #fff;
+      }
+      .btn-secondary {
+        background: #e5e7eb;
+        color: #111827;
+      }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+        margin-bottom: 16px;
+      }
+      .hidden {
+        display: none;
+      }
+      form label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      form input[type="text"],
+      form input[type="email"],
+      form input[type="password"],
+      form textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        margin-top: 4px;
+        font-size: 0.95rem;
+      }
+      form textarea {
+        resize: vertical;
+      }
+      form input[type="file"] {
+        margin-top: 4px;
+        font-size: 0.9rem;
+      }
+      form .form-actions {
+        margin-top: 12px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .error {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 6px;
+      }
+      .hint {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-top: 4px;
+      }
+      #posts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .post {
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 16px;
+      }
+      .post:last-child {
+        border-bottom: none;
+      }
+      .post h2 {
+        margin: 4px 0 8px;
+        font-size: 1.25rem;
+      }
+      .post-meta {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 4px;
+      }
+      .post-image {
+        max-width: 100%;
+        border-radius: 10px;
+        margin: 8px 0;
+        display: block;
+      }
+      @media (max-width: 640px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        header .right {
+          align-self: flex-end;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Můj blog</h1>
+        <div class="right">
+          <span id="user-label" class="hint">Nepřihlášený</span>
+          <button id="login-button" class="btn btn-primary">
+            Přihlásit se
+          </button>
+          <button id="logout-button" class="btn btn-secondary hidden">
+            Odhlásit
+          </button>
+        </div>
+      </header>
+
+      <!-- LOGIN MODAL (jednoduché) -->
+      <div id="login-card" class="card hidden">
+        <h2>Přihlášení pro autora</h2>
+        <form id="login-form">
+          <label>
+            Email
+            <input type="email" id="login-email" required />
+          </label>
+          <label>
+            Heslo
+            <input type="password" id="login-password" required />
+          </label>
+          <div class="form-actions">
+            <button type="button" id="login-cancel" class="btn btn-secondary">
+              Zavřít
+            </button>
+            <button type="submit" class="btn btn-primary">Přihlásit</button>
+          </div>
+          <p id="login-error" class="error"></p>
+          <p class="hint">
+            Tento login je jen pro tebe, čtenáři se nepřihlašují.
+          </p>
+        </form>
+      </div>
+
+      <!-- ADMIN – nový příspěvek, vidí jen přihlášený -->
+      <section id="admin-card" class="card hidden">
+        <h2>Nový příspěvek</h2>
+        <form id="post-form">
+          <label>
+            Nadpis
+            <input type="text" id="post-title" required />
+          </label>
+          <label>
+            Text
+            <textarea id="post-body" rows="4" required></textarea>
+          </label>
+          <label>
+            Obrázek (volitelné)
+            <input type="file" id="post-image" accept="image/*" />
+          </label>
+          <div class="form-actions">
+            <button type="reset" class="btn btn-secondary">Vymazat</button>
+            <button type="submit" class="btn btn-primary">Publikovat</button>
+          </div>
+        </form>
+        <p class="hint">
+          Po publikování se příspěvek hned objeví níže a je viditelný pro
+          všechny.
+        </p>
+        <p id="post-error" class="error"></p>
+      </section>
+
+      <!-- PŘÍSPĚVKY – vidí všichni -->
+      <section class="card">
+        <h2>Příspěvky</h2>
+        <div id="posts-list">
+          <p class="hint">Načítám příspěvky…</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Firebase + app logika -->
+    <script type="module">
+      // Firebase imports (modular v9)
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+        signInWithEmailAndPassword,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        query,
+        orderBy,
+        onSnapshot,
+        serverTimestamp,
+      } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+      import {
+        getStorage,
+        ref,
+        uploadBytes,
+        getDownloadURL,
+      } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+
+      // 🔧 1) TADY NAHRAĎ CONFIG ZE SVÉHO FIREBASE PROJEKTU
+      const firebaseConfig = {
+        // TODO: nahraď vlastním configem z Firebase konzole
+        apiKey: "TVŮJ_API_KEY",
+        authDomain: "TVŮJ_PROJEKT.firebaseapp.com",
+        projectId: "TVŮJ_PROJEKT",
+        storageBucket: "TVŮJ_PROJEKT.appspot.com",
+        messagingSenderId: "ČÍSLO",
+        appId: "TVÉ_APP_ID",
+      };
+
+      // Inicializace Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const storage = getStorage(app);
+
+      // HTML elementy
+      const userLabel = document.getElementById("user-label");
+      const loginButton = document.getElementById("login-button");
+      const logoutButton = document.getElementById("logout-button");
+      const loginCard = document.getElementById("login-card");
+      const loginForm = document.getElementById("login-form");
+      const loginCancel = document.getElementById("login-cancel");
+      const loginError = document.getElementById("login-error");
+
+      const adminCard = document.getElementById("admin-card");
+      const postForm = document.getElementById("post-form");
+      const postError = document.getElementById("post-error");
+      const postsList = document.getElementById("posts-list");
+
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function formatDate(ts) {
+        if (!ts) return "";
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        return d.toLocaleString("cs-CZ");
+      }
+
+      // UI podle stavu přihlášení
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          userLabel.textContent = "Přihlášen: " + (user.email || "autor");
+          adminCard.classList.remove("hidden");
+          logoutButton.classList.remove("hidden");
+          loginButton.classList.add("hidden");
+          loginCard.classList.add("hidden");
+        } else {
+          userLabel.textContent = "Nepřihlášený";
+          adminCard.classList.add("hidden");
+          logoutButton.classList.add("hidden");
+          loginButton.classList.remove("hidden");
+          loginCard.classList.add("hidden");
+        }
+      });
+
+      // Otevřít / zavřít login
+      loginButton.addEventListener("click", () => {
+        loginCard.classList.remove("hidden");
+        loginError.textContent = "";
+      });
+      loginCancel.addEventListener("click", () => {
+        loginCard.classList.add("hidden");
+        loginForm.reset();
+        loginError.textContent = "";
+      });
+
+      // Přihlášení
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+        loginError.textContent = "";
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          loginForm.reset();
+          loginCard.classList.add("hidden");
+        } catch (err) {
+          console.error(err);
+          loginError.textContent =
+            "Přihlášení selhalo. Zkontroluj email/heslo.";
+        }
+      });
+
+      // Odhlášení
+      logoutButton.addEventListener("click", async () => {
+        await signOut(auth);
+      });
+
+      // Načítání příspěvků v reálném čase
+      const postsRef = collection(db, "posts");
+      const postsQuery = query(postsRef, orderBy("createdAt", "desc"));
+
+      onSnapshot(
+        postsQuery,
+        (snapshot) => {
+          if (snapshot.empty) {
+            postsList.innerHTML = "<p>Zatím žádné příspěvky.</p>";
+            return;
+          }
+
+          const html = snapshot.docs
+            .map((doc) => {
+              const data = doc.data();
+              const title = escapeHtml(data.title || "");
+              const body = escapeHtml(data.body || "").replace(/\n/g, "<br>");
+              const created = formatDate(data.createdAt);
+              const imageUrl = data.imageUrl;
+
+              return `
+            <article class="post">
+              <div class="post-meta">${created}</div>
+              <h2>${title}</h2>
+              ${
+                imageUrl
+                  ? `<img src="${imageUrl}" class="post-image" alt="">`
+                  : ""
+              }
+              <p>${body}</p>
+            </article>
+          `;
+            })
+            .join("");
+
+          postsList.innerHTML = html;
+        },
+        (error) => {
+          console.error(error);
+          postsList.innerHTML =
+            "<p class='error'>Chyba při načítání příspěvků.</p>";
+        }
+      );
+
+      // Přidání nového příspěvku
+      postForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        postError.textContent = "";
+
+        const titleEl = document.getElementById("post-title");
+        const bodyEl = document.getElementById("post-body");
+        const imageInput = document.getElementById("post-image");
+
+        const title = titleEl.value.trim();
+        const body = bodyEl.value.trim();
+
+        if (!title || !body) {
+          postError.textContent = "Prosím vyplň nadpis i text.";
+          return;
+        }
+
+        try {
+          // případný upload obrázku
+          let imageUrl = null;
+          const file = imageInput.files[0];
+
+          if (file) {
+            const storageRef = ref(
+              storage,
+              "images/" + Date.now() + "_" + file.name
+            );
+            const snap = await uploadBytes(storageRef, file);
+            imageUrl = await getDownloadURL(snap.ref);
+          }
+
+          await addDoc(postsRef, {
+            title,
+            body,
+            imageUrl,
+            createdAt: serverTimestamp(),
+          });
+
+          postForm.reset();
+        } catch (err) {
+          console.error(err);
+          postError.textContent = "Nepodařilo se uložit příspěvek.";
+        }
+      });
+    </script>
+  </body>
+</html>
